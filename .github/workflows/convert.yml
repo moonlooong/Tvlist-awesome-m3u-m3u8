@@ -1,0 +1,36 @@
+name: Convert M3U to DIYP
+
+on:
+  push:
+    paths:
+      - "m3u/湖南联通组播源.m3u"
+  workflow_dispatch:  # allow manual trigger
+
+jobs:
+  convert:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write  # needed to push
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run conversion
+        run: |
+          python3 scripts/m3u_to_diyp.py "m3u/湖南联通组播源.m3u" "txt/湖南联通组播源.txt"
+
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          # Only commit if the file actually changed
+          if git diff --quiet txt/湖南联通组播源.txt; then
+            echo "No changes to commit"
+            exit 0
+          fi
+
+          git add txt/湖南联通组播源.txt
+          git commit -m "Auto-convert: 湖南联通组播源.m3u → DIYP format [skip ci]"
+          git push
